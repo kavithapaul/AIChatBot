@@ -6,16 +6,23 @@ load_dotenv()
 
 class AIChatBot:
     def __init__(self):
-        self.client = openai.OpenAI(
-            api_key=os.getenv('OPENAI_API_KEY')
-        )
+        self.api_key = os.getenv('OPENAI_API_KEY')
+        self.client = None
         self.conversation_history = []
+    
+    def _get_client(self):
+        if self.client is None:
+            if not self.api_key:
+                raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY environment variable.")
+            self.client = openai.OpenAI(api_key=self.api_key)
+        return self.client
     
     def get_response(self, user_input):
         try:
             self.conversation_history.append({"role": "user", "content": user_input})
             
-            response = self.client.chat.completions.create(
+            client = self._get_client()
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a helpful AI assistant. Be friendly and conversational."},
